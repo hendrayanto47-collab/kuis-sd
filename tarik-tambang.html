@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tarik Tambang Matematika</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#171B34; --bg-2:#20264A; --panel:#242B54; --ink:#F4F1E8; --ink-dim:#AEB3D6;
+    --gold:#FFC94D; --line:#3A4178;
+    --font-display:'Baloo 2','Trebuchet MS',system-ui,sans-serif;
+    --font-body:'Nunito','Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;width:100%;background:var(--bg);color:var(--ink);
+    font-family:var(--font-body);overflow:hidden;touch-action:manipulation;
+    -webkit-user-select:none;user-select:none;}
+  #app{height:100vh;width:100vw;position:relative;}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;height:100%;width:100%;}
+  .screen.active{display:flex;}
+  a.back-link{position:fixed;top:14px;left:14px;z-index:60;font-size:13px;color:var(--ink-dim);
+    background:var(--bg-2);border:1px solid var(--line);padding:8px 14px;border-radius:8px;text-decoration:none;}
+
+  /* ---------- SETUP ---------- */
+  #setup{align-items:center;justify-content:center;padding:5vh 4vw;overflow-y:auto;}
+  .setup-card{width:min(880px,92vw);display:flex;flex-direction:column;gap:2.2vh;}
+  .brand{display:flex;align-items:baseline;gap:14px;}
+  .brand-mark{font-family:var(--font-display);font-weight:800;font-size:clamp(26px,3.2vw,40px);color:var(--gold);}
+  .brand-sub{font-size:clamp(13px,1.2vw,17px);color:var(--ink-dim);}
+  .setup-block{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:clamp(16px,2.2vw,26px);}
+  .setup-block h3{font-family:var(--font-display);font-weight:600;font-size:clamp(17px,1.6vw,21px);margin:0 0 14px 0;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+  .choice-btn{flex:1 1 120px;padding:14px 10px;border-radius:12px;border:2px solid var(--line);
+    background:var(--bg-2);color:var(--ink);font-family:var(--font-body);font-weight:700;
+    font-size:clamp(14px,1.1vw,16px);cursor:pointer;text-align:center;}
+  .choice-btn.selected{border-color:var(--gold);background:#3A2F1A;color:var(--gold);}
+  .team-setup-row{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;margin-bottom:10px;}
+  .team-setup-row input{flex:1;padding:12px 16px;border-radius:10px;border:2px solid rgba(0,0,0,.2);
+    background:rgba(255,255,255,.92);color:#141520;font-family:var(--font-body);font-weight:800;font-size:16px;}
+  .vs-label{text-align:center;font-family:var(--font-display);font-weight:800;color:var(--ink-dim);
+    font-size:14px;margin:-4px 0;}
+  .start-btn{margin-top:4px;padding:18px;border-radius:14px;border:none;cursor:pointer;
+    background:var(--gold);color:#211A05;font-family:var(--font-display);font-weight:700;
+    font-size:clamp(18px,2vw,24px);}
+
+  /* ---------- PLAY ---------- */
+  #play{background:var(--bg);}
+  .top-bar{display:flex;align-items:center;justify-content:space-between;padding:1.4vh 2.4vw;
+    border-bottom:2px solid var(--line);flex-shrink:0;}
+  .q-counter{font-family:var(--font-display);font-weight:600;color:var(--ink-dim);font-size:clamp(13px,1.1vw,16px);}
+  .gear-btn{width:44px;height:44px;border-radius:12px;border:2px solid var(--line);background:var(--bg-2);
+    color:var(--ink-dim);font-size:20px;cursor:pointer;}
+
+  .question-wrap{flex-shrink:0;padding:1.8vh 4vw 1.4vh 4vw;text-align:center;}
+  .question-text{font-family:var(--font-display);font-weight:700;line-height:1.25;
+    font-size:clamp(22px,3.2vw,40px);}
+
+  /* Rope visualization */
+  .rope-wrap{flex-shrink:0;padding:0 4vw 1.6vh 4vw;}
+  .rope-track{position:relative;height:56px;border-radius:28px;background:var(--bg-2);
+    border:2px solid var(--line);overflow:hidden;}
+  .rope-fill-a{position:absolute;left:0;top:0;bottom:0;transition:width .5s ease;}
+  .rope-fill-b{position:absolute;right:0;top:0;bottom:0;transition:width .5s ease;}
+  .rope-center-mark{position:absolute;left:50%;top:0;bottom:0;width:2px;background:rgba(255,255,255,.25);}
+  .rope-knot{position:absolute;top:50%;width:44px;height:44px;border-radius:50%;background:var(--gold);
+    border:4px solid #211A05; transform:translate(-50%,-50%); transition:left .5s cubic-bezier(.3,.9,.4,1.2);
+    display:flex;align-items:center;justify-content:center;font-size:20px;z-index:5;}
+  .rope-labels{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--font-display);
+    font-weight:700;font-size:clamp(13px,1.3vw,17px);}
+
+  .status-line{height:4vh;display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:600;font-size:clamp(14px,1.6vw,20px);}
+  .status-line.waiting{color:var(--ink-dim);}
+  .status-line.locked{color:var(--gold);}
+  .status-line.correct{color:#5BE38A;}
+  .status-line.wrong{color:#FF6B6B;}
+
+  .zones{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 2.4vw 2.4vh 2.4vw;min-height:0;}
+  .zone{position:relative;border-radius:20px;border:3px solid rgba(255,255,255,.14);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;overflow:hidden;transition:transform .08s ease,filter .12s ease;}
+  .zone:active{transform:scale(.97);}
+  .zone .team-label{font-family:var(--font-display);font-weight:700;font-size:clamp(18px,2.6vw,30px);color:rgba(0,0,0,.78);}
+  .zone .tap-hint{font-family:var(--font-body);font-weight:800;font-size:clamp(12px,1vw,15px);color:rgba(0,0,0,.55);margin-top:6px;}
+  .zone.dimmed{filter:brightness(.35) saturate(.6);}
+  .zone.winner{filter:brightness(1.15);box-shadow:0 0 0 6px var(--gold) inset;}
+  .zone.disabled{pointer-events:none;}
+
+  .options-overlay{position:absolute;inset:0;background:rgba(10,12,26,.94);display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:3vh;padding:4vh 4vw;z-index:20;}
+  .options-overlay.active{display:flex;}
+  .options-overlay .for-team{font-family:var(--font-display);font-weight:700;font-size:clamp(20px,2.6vw,32px);}
+  .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;width:min(880px,88vw);}
+  .opt-btn{padding:clamp(16px,2.2vh,26px) 14px;border-radius:16px;border:3px solid var(--line);
+    background:var(--panel);color:var(--ink);font-family:var(--font-display);font-weight:600;
+    font-size:clamp(16px,1.8vw,22px);cursor:pointer;}
+  .opt-btn.right{background:#1E4A34;border-color:#5BE38A;}
+  .opt-btn.wrong{background:#4A1E1E;border-color:#FF6B6B;}
+
+  .teacher-panel{position:absolute;top:0;right:0;height:100%;width:min(340px,86vw);background:var(--panel);
+    border-left:2px solid var(--line);z-index:30;transform:translateX(100%);transition:transform .2s ease;
+    display:flex;flex-direction:column;padding:2.2vh 2vw;gap:12px;overflow-y:auto;}
+  .teacher-panel.open{transform:translateX(0);}
+  .teacher-panel h4{font-family:var(--font-display);margin:0 0 4px 0;font-size:18px;}
+  .tp-btn{padding:14px;border-radius:12px;border:2px solid var(--line);background:var(--bg-2);
+    color:var(--ink);font-family:var(--font-body);font-weight:700;font-size:15px;cursor:pointer;text-align:left;}
+  .tp-btn.primary{background:var(--gold);color:#211A05;border-color:var(--gold);}
+
+  /* ---------- RESULT ---------- */
+  #result{align-items:center;justify-content:center;padding:4vh 4vw;text-align:center;}
+  .result-banner{font-family:var(--font-display);font-weight:800;font-size:clamp(30px,5vw,58px);margin-bottom:2vh;}
+  .result-rope{width:min(700px,88vw);margin-bottom:3vh;}
+  .result-actions{display:flex;gap:14px;}
+  .result-actions button{padding:14px 22px;border-radius:12px;border:2px solid var(--line);background:var(--bg-2);
+    color:var(--ink);font-family:var(--font-body);font-weight:700;cursor:pointer;font-size:15px;}
+  .result-actions button.primary{background:var(--gold);color:#211A05;border-color:var(--gold);}
+
+  .fs-btn{position:fixed;bottom:14px;left:14px;z-index:50;opacity:.55;font-size:12px;padding:8px 12px;
+    border-radius:8px;border:1px solid var(--line);background:var(--bg-2);color:var(--ink-dim);cursor:pointer;}
+</style>
+</head>
+<body>
+<a class="back-link" href="index.html">← Beranda</a>
+<div id="app">
+
+  <!-- ============ SETUP ============ -->
+  <section id="setup" class="screen active">
+    <div class="setup-card">
+      <div class="brand">
+        <div class="brand-mark">🪢 Tarik Tambang Matematika</div>
+      </div>
+      <div class="brand-sub">2 kelompok adu cepat & tepat — siapa berhasil menarik tali ke sisinya?</div>
+
+      <div class="setup-block">
+        <h3>1. Tingkat kelas</h3>
+        <div class="row" id="gradeRow"></div>
+      </div>
+
+      <div class="setup-block">
+        <h3>2. Nama kelompok</h3>
+        <div class="team-setup-row" id="rowA" style="background:#FF5D5D;">
+          <span style="font-family:var(--font-display);font-weight:800;color:rgba(0,0,0,.6);">Sisi A</span>
+          <input id="nameA" value="Kelompok Merah" maxlength="16">
+        </div>
+        <div class="vs-label">VS</div>
+        <div class="team-setup-row" id="rowB" style="background:#3E9CFF;">
+          <span style="font-family:var(--font-display);font-weight:800;color:rgba(0,0,0,.6);">Sisi B</span>
+          <input id="nameB" value="Kelompok Biru" maxlength="16">
+        </div>
+      </div>
+
+      <div class="setup-block">
+        <h3>3. Jumlah soal per permainan</h3>
+        <div class="row" id="totalQRow"></div>
+      </div>
+
+      <button class="start-btn" id="startBtn">Mulai Tarik Tambang</button>
+    </div>
+  </section>
+
+  <!-- ============ PLAY ============ -->
+  <section id="play" class="screen">
+    <div class="top-bar">
+      <div class="q-counter" id="qCounter">Soal 1 / 10</div>
+      <button class="gear-btn" id="gearBtn" title="Panel guru">⚙</button>
+    </div>
+    <div class="question-wrap"><div class="question-text" id="questionText">—</div></div>
+
+    <div class="rope-wrap">
+      <div class="rope-track" id="ropeTrack">
+        <div class="rope-fill-a" id="ropeFillA"></div>
+        <div class="rope-fill-b" id="ropeFillB"></div>
+        <div class="rope-center-mark"></div>
+        <div class="rope-knot" id="ropeKnot">🪢</div>
+      </div>
+      <div class="rope-labels">
+        <span id="labelA" style="color:#FF5D5D;">Kelompok Merah</span>
+        <span id="labelB" style="color:#3E9CFF;">Kelompok Biru</span>
+      </div>
+    </div>
+
+    <div class="status-line waiting" id="statusLine">Ketuk zona kelompok untuk menjawab duluan!</div>
+    <div class="zones" id="zones"></div>
+
+    <div class="options-overlay" id="optionsOverlay">
+      <div class="for-team" id="forTeamLabel">Kelompok Merah menjawab:</div>
+      <div class="options-grid" id="optionsGrid"></div>
+    </div>
+
+    <div class="teacher-panel" id="teacherPanel">
+      <h4>Panel Guru</h4>
+      <button class="tp-btn" id="tpResetBuzz">🔁 Reset buzzer (ulang soal ini)</button>
+      <button class="tp-btn" id="tpSkip">⏭ Lewati soal ini</button>
+      <button class="tp-btn primary" id="tpFinish">🏁 Selesai sekarang & lihat hasil</button>
+      <button class="tp-btn" id="tpClose">Tutup panel</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULT ============ -->
+  <section id="result" class="screen">
+    <div class="result-banner" id="resultBanner">🎉 Kelompok Merah Menang!</div>
+    <div class="rope-track result-rope" id="resultRopeTrack">
+      <div class="rope-fill-a" id="resultFillA"></div>
+      <div class="rope-fill-b" id="resultFillB"></div>
+      <div class="rope-center-mark"></div>
+    </div>
+    <div class="result-actions">
+      <button id="resultAgainBtn">Main Lagi</button>
+      <button class="primary" id="resultNewBtn">Pengaturan Baru</button>
+    </div>
+  </section>
+
+</div>
+<button class="fs-btn" id="fsBtn">Layar Penuh</button>
+
+<script>
+/* Bank soal Matematika (sama seperti game Kuis Kelompok) */
+const GRADES = {
+  "1-2": [
+    {q:"3 + 4 = ?", options:["6","7","8","9"], correct:1},
+    {q:"9 - 5 = ?", options:["3","4","5","6"], correct:1},
+    {q:"2 + 2 + 2 = ?", options:["4","5","6","8"], correct:2},
+    {q:"Angka setelah 19 adalah ...", options:["18","20","21","19"], correct:1},
+    {q:"10 - 4 = ?", options:["5","6","7","8"], correct:1},
+    {q:"5 + 5 = ?", options:["9","10","11","12"], correct:1},
+    {q:"7 + 1 = ?", options:["7","8","9","6"], correct:1},
+    {q:"6 - 2 = ?", options:["3","4","5","6"], correct:1},
+    {q:"4 + 6 = ?", options:["8","9","10","11"], correct:2},
+    {q:"8 - 3 = ?", options:["4","5","6","7"], correct:1},
+  ],
+  "3-4": [
+    {q:"6 × 7 = ?", options:["36","42","48","40"], correct:1},
+    {q:"81 ÷ 9 = ?", options:["7","8","9","10"], correct:2},
+    {q:"128 + 47 = ?", options:["165","175","185","155"], correct:1},
+    {q:"200 - 68 = ?", options:["132","122","142","152"], correct:0},
+    {q:"Hasil dari 8 × 9 = ?", options:["63","72","81","64"], correct:1},
+    {q:"Keliling persegi sisi 5 cm adalah ...", options:["10 cm","15 cm","20 cm","25 cm"], correct:2},
+    {q:"3/4 sama dengan berapa perdelapan?", options:["4/8","5/8","6/8","7/8"], correct:2},
+    {q:"144 ÷ 12 = ?", options:["11","12","13","14"], correct:1},
+    {q:"Bilangan genap terbesar di bawah 50 adalah ...", options:["46","47","48","49"], correct:2},
+    {q:"9 × 6 = ?", options:["45","54","56","63"], correct:1},
+    {q:"7 × 8 = ?", options:["54","56","58","64"], correct:1},
+    {q:"96 ÷ 8 = ?", options:["10","11","12","13"], correct:2},
+  ],
+  "5-6": [
+    {q:"25% dari 200 adalah ...", options:["25","40","50","60"], correct:2},
+    {q:"KPK dari 4 dan 6 adalah ...", options:["10","12","18","24"], correct:1},
+    {q:"FPB dari 18 dan 24 adalah ...", options:["4","6","8","9"], correct:1},
+    {q:"3,5 + 2,75 = ?", options:["5,25","6,25","6,15","5,75"], correct:1},
+    {q:"Luas persegi panjang 8 × 5 cm adalah ...", options:["13 cm²","26 cm²","40 cm²","45 cm²"], correct:2},
+    {q:"1/2 + 1/4 = ?", options:["2/6","2/4","3/4","1/4"], correct:2},
+    {q:"Hasil dari 12² adalah ...", options:["124","144","132","121"], correct:1},
+    {q:"Volume kubus sisi 4 cm adalah ...", options:["16 cm³","48 cm³","64 cm³","12 cm³"], correct:2},
+  ],
+};
+const COLOR_A = "#FF5D5D";
+const COLOR_B = "#3E9CFF";
+const ROPE_MIN = -10, ROPE_MAX = 10;
+const CORRECT_STEP = 2;   // tali tertarik ke arah yang jawab benar
+const WRONG_PENALTY = 1;  // tali tertarik ke arah lawan kalau salah
+
+let state = {
+  grade: "3-4",
+  totalQ: 10,
+  nameA: "Kelompok Merah",
+  nameB: "Kelompok Biru",
+  questions: [],
+  qIndex: 0,
+  rope: 0,
+  locked: false,
+  lockedSide: null, // 'A' | 'B'
+};
+
+/* ---------- Sound ---------- */
+let audioCtx = null;
+function beep(freq,dur,type="sine",vol=0.18){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type=type; o.frequency.value=freq; g.gain.value=vol;
+    o.connect(g); g.connect(audioCtx.destination); o.start();
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+    o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+function soundBuzz(){beep(720,0.12,"square",0.2);}
+function soundCorrect(){beep(523,0.1);setTimeout(()=>beep(659,0.1),100);setTimeout(()=>beep(784,0.18),200);}
+function soundWrong(){beep(180,0.28,"sawtooth",0.15);}
+function soundWin(){beep(523,0.12);setTimeout(()=>beep(659,0.12),120);setTimeout(()=>beep(784,0.12),240);setTimeout(()=>beep(1047,0.3),360);}
+
+/* ---------- SETUP ---------- */
+const gradeRow = document.getElementById('gradeRow');
+const totalQRow = document.getElementById('totalQRow');
+function renderGradeChoices(){
+  gradeRow.innerHTML='';
+  [["1-2","Kelas 1–2"],["3-4","Kelas 3–4"],["5-6","Kelas 5–6"]].forEach(([key,label])=>{
+    const b=document.createElement('button');
+    b.className='choice-btn'+(key===state.grade?' selected':'');
+    b.textContent=label;
+    b.onclick=()=>{state.grade=key; renderGradeChoices();};
+    gradeRow.appendChild(b);
+  });
+}
+function renderTotalQChoices(){
+  totalQRow.innerHTML='';
+  [10,15,20].forEach(n=>{
+    const b=document.createElement('button');
+    b.className='choice-btn'+(n===state.totalQ?' selected':'');
+    b.textContent=n+' soal';
+    b.onclick=()=>{state.totalQ=n; renderTotalQChoices();};
+    totalQRow.appendChild(b);
+  });
+}
+renderGradeChoices();
+renderTotalQChoices();
+
+document.getElementById('nameA').oninput = (e)=>{ state.nameA = e.target.value || 'Kelompok A'; };
+document.getElementById('nameB').oninput = (e)=>{ state.nameB = e.target.value || 'Kelompok B'; };
+document.getElementById('startBtn').onclick = startGame;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ---------- START ---------- */
+function startGame(){
+  const pool = (GRADES[state.grade]||[]).slice();
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]];}
+  // ulangi soal kalau jumlah diminta lebih banyak dari bank soal tersedia
+  while(pool.length < state.totalQ){ pool.push(...pool.slice(0, state.totalQ - pool.length)); }
+  state.questions = pool.slice(0, state.totalQ);
+  state.qIndex = 0;
+  state.rope = 0;
+  document.getElementById('labelA').textContent = state.nameA;
+  document.getElementById('labelB').textContent = state.nameB;
+  renderZones();
+  updateRopeVisual();
+  loadQuestion();
+  showScreen('play');
+}
+
+/* ---------- ZONES ---------- */
+const zonesEl = document.getElementById('zones');
+const questionText = document.getElementById('questionText');
+const qCounter = document.getElementById('qCounter');
+const statusLine = document.getElementById('statusLine');
+const optionsOverlay = document.getElementById('optionsOverlay');
+const optionsGrid = document.getElementById('optionsGrid');
+const forTeamLabel = document.getElementById('forTeamLabel');
+
+function escapeHtml(str){ const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
+
+function renderZones(){
+  zonesEl.innerHTML = '';
+  const zA = document.createElement('div');
+  zA.className='zone'; zA.style.background=COLOR_A; zA.dataset.side='A';
+  zA.innerHTML = `<div class="team-label">${escapeHtml(state.nameA)}</div><div class="tap-hint">KETUK DI SINI</div>`;
+  zA.addEventListener('pointerdown', ()=>onZoneBuzz('A'));
+
+  const zB = document.createElement('div');
+  zB.className='zone'; zB.style.background=COLOR_B; zB.dataset.side='B';
+  zB.innerHTML = `<div class="team-label">${escapeHtml(state.nameB)}</div><div class="tap-hint">KETUK DI SINI</div>`;
+  zB.addEventListener('pointerdown', ()=>onZoneBuzz('B'));
+
+  zonesEl.appendChild(zA);
+  zonesEl.appendChild(zB);
+}
+
+function loadQuestion(){
+  state.locked=false; state.lockedSide=null;
+  optionsOverlay.classList.remove('active');
+  const q = state.questions[state.qIndex];
+  if(!q){ endGame(); return; }
+  questionText.textContent = q.q;
+  qCounter.textContent = `Soal ${state.qIndex+1} / ${state.questions.length}`;
+  statusLine.className='status-line waiting';
+  statusLine.textContent='Ketuk zona kelompok untuk menjawab duluan!';
+  document.querySelectorAll('.zone').forEach(z=>z.classList.remove('dimmed','winner','disabled'));
+}
+
+function onZoneBuzz(side){
+  if(state.locked) return;
+  state.locked=true; state.lockedSide=side;
+  soundBuzz();
+  document.querySelectorAll('.zone').forEach(z=>{
+    z.classList.add('disabled');
+    if(z.dataset.side===side){z.classList.add('winner');} else {z.classList.add('dimmed');}
+  });
+  const name = side==='A'?state.nameA:state.nameB;
+  statusLine.className='status-line locked';
+  statusLine.textContent=`${name} duluan! Menjawab sekarang...`;
+  openOptionsFor(side);
+}
+
+function openOptionsFor(side){
+  const name = side==='A'?state.nameA:state.nameB;
+  const color = side==='A'?COLOR_A:COLOR_B;
+  const q = state.questions[state.qIndex];
+  forTeamLabel.textContent = `${name} menjawab:`;
+  forTeamLabel.style.color = color;
+  optionsGrid.innerHTML='';
+  q.options.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.className='opt-btn'; b.textContent=opt;
+    b.onclick=()=>answerSelected(side,i);
+    optionsGrid.appendChild(b);
+  });
+  optionsOverlay.classList.add('active');
+}
+
+function answerSelected(side, optIdx){
+  const q = state.questions[state.qIndex];
+  document.querySelectorAll('.opt-btn').forEach(b=>b.onclick=null);
+  const isCorrect = (optIdx===q.correct);
+  document.querySelectorAll('.opt-btn').forEach((b,i)=>{
+    if(i===q.correct) b.classList.add('right');
+    if(i===optIdx && !isCorrect) b.classList.add('wrong');
+  });
+  const name = side==='A'?state.nameA:state.nameB;
+  if(isCorrect){
+    state.rope += (side==='A' ? -CORRECT_STEP : CORRECT_STEP);
+    soundCorrect();
+    statusLine.className='status-line correct';
+    statusLine.textContent=`Benar! Tali tertarik ke ${name} 💪`;
+  }else{
+    // salah: tali tertarik sedikit ke arah LAWAN (hukuman)
+    state.rope += (side==='A' ? WRONG_PENALTY : -WRONG_PENALTY);
+    soundWrong();
+    statusLine.className='status-line wrong';
+    statusLine.textContent=`Kurang tepat, tali malah tertarik ke lawan! Jawaban benar: ${q.options[q.correct]}`;
+  }
+  state.rope = Math.max(ROPE_MIN, Math.min(ROPE_MAX, state.rope));
+  updateRopeVisual();
+  setTimeout(()=>{
+    optionsOverlay.classList.remove('active');
+    if(state.rope<=ROPE_MIN || state.rope>=ROPE_MAX){ endGame(); return; }
+    nextQuestion();
+  }, 2200);
+}
+
+function nextQuestion(){
+  state.qIndex += 1;
+  if(state.qIndex >= state.questions.length){ endGame(); return; }
+  loadQuestion();
+}
+
+/* ---------- ROPE VISUAL ---------- */
+function ropeToPercent(rope){
+  // rope: -10 (full A) .. 0 (tengah) .. +10 (full B)
+  // posisi knot dalam % dari kiri: A menang -> mendekat ke 0%, B menang -> mendekat ke 100%
+  return 50 + (rope/ROPE_MAX)*42; // batasi max 92%/8% biar knot ga nempel tepi
+}
+function updateRopeVisual(){
+  const pct = ropeToPercent(state.rope);
+  const knot = document.getElementById('ropeKnot');
+  const fillA = document.getElementById('ropeFillA');
+  const fillB = document.getElementById('ropeFillB');
+  knot.style.left = pct + '%';
+  // makin negatif rope (A menang) -> fill A makin lebar; makin positif -> fill B makin lebar
+  const aPct = Math.max(0, -state.rope/ROPE_MAX) * 50;
+  const bPct = Math.max(0, state.rope/ROPE_MAX) * 50;
+  fillA.style.width = aPct + '%';
+  fillA.style.background = COLOR_A;
+  fillB.style.width = bPct + '%';
+  fillB.style.background = COLOR_B;
+}
+
+/* ---------- TEACHER PANEL ---------- */
+const teacherPanel = document.getElementById('teacherPanel');
+document.getElementById('gearBtn').onclick = ()=> teacherPanel.classList.add('open');
+document.getElementById('tpClose').onclick = ()=> teacherPanel.classList.remove('open');
+document.getElementById('tpResetBuzz').onclick = ()=>{ teacherPanel.classList.remove('open'); loadQuestion(); };
+document.getElementById('tpSkip').onclick = ()=>{ teacherPanel.classList.remove('open'); nextQuestion(); };
+document.getElementById('tpFinish').onclick = ()=>{ teacherPanel.classList.remove('open'); endGame(); };
+
+/* ---------- RESULT ---------- */
+function endGame(){
+  soundWin();
+  const banner = document.getElementById('resultBanner');
+  if(Math.abs(state.rope) < 0.5){
+    banner.textContent = '🤝 Seri! Tali di tengah!';
+  } else if(state.rope < 0){
+    banner.textContent = `🎉 ${state.nameA} Menang!`;
+    banner.style.color = COLOR_A;
+  } else {
+    banner.textContent = `🎉 ${state.nameB} Menang!`;
+    banner.style.color = COLOR_B;
+  }
+  const pct = ropeToPercent(state.rope);
+  const aPct = Math.max(0, -state.rope/ROPE_MAX) * 50;
+  const bPct = Math.max(0, state.rope/ROPE_MAX) * 50;
+  document.getElementById('resultFillA').style.width = aPct+'%';
+  document.getElementById('resultFillA').style.background = COLOR_A;
+  document.getElementById('resultFillB').style.width = bPct+'%';
+  document.getElementById('resultFillB').style.background = COLOR_B;
+  showScreen('result');
+}
+document.getElementById('resultAgainBtn').onclick = ()=>{ startGame(); };
+document.getElementById('resultNewBtn').onclick = ()=>{ showScreen('setup'); };
+
+/* ---------- FULLSCREEN ---------- */
+document.getElementById('fsBtn').onclick = ()=>{
+  if(!document.fullscreenElement){ document.documentElement.requestFullscreen().catch(()=>{}); }
+  else{ document.exitFullscreen(); }
+};
+</script>
+</body>
+</html>
