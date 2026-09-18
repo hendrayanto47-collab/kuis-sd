@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kuis Kelompok — Layar Besar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#171B34;
+    --bg-2:#20264A;
+    --panel:#242B54;
+    --ink:#F4F1E8;
+    --ink-dim:#AEB3D6;
+    --gold:#FFC94D;
+    --line:#3A4178;
+    --font-display:'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+    --font-body:'Nunito', 'Segoe UI', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%; width:100%;
+    background:var(--bg); color:var(--ink);
+    font-family:var(--font-body);
+    overflow:hidden; touch-action:manipulation;
+    -webkit-user-select:none; user-select:none;
+  }
+  #app{height:100vh; width:100vw; position:relative;}
+  .screen{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; height:100%; width:100%;
+  }
+  .screen.active{display:flex;}
+
+  /* ---------- SETUP SCREEN ---------- */
+  #setup{align-items:center; justify-content:center; padding:4vh 4vw; overflow-y:auto;}
+  .setup-card{width:min(920px, 92vw); display:flex; flex-direction:column; gap:2.2vh;}
+  .brand{display:flex; align-items:baseline; gap:14px; margin-bottom:.5vh;}
+  .brand-mark{
+    font-family:var(--font-display); font-weight:800; font-size:clamp(28px,3.4vw,44px);
+    color:var(--gold); letter-spacing:.5px;
+  }
+  .brand-sub{font-size:clamp(14px,1.3vw,18px); color:var(--ink-dim);}
+  .setup-block{
+    background:var(--panel); border:2px solid var(--line); border-radius:18px;
+    padding:clamp(16px,2.2vw,28px);
+  }
+  .setup-block h3{
+    font-family:var(--font-display); font-weight:600; font-size:clamp(18px,1.7vw,22px);
+    margin:0 0 14px 0; color:var(--ink);
+  }
+  .row{display:flex; gap:12px; flex-wrap:wrap;}
+  .choice-btn{
+    flex:1 1 130px; padding:14px 10px; border-radius:12px; border:2px solid var(--line);
+    background:var(--bg-2); color:var(--ink); font-family:var(--font-body); font-weight:700;
+    font-size:clamp(14px,1.1vw,16px); cursor:pointer; text-align:center; transition:transform .12s ease, border-color .12s ease;
+  }
+  .choice-btn:hover{transform:translateY(-2px);}
+  .choice-btn.selected{border-color:var(--gold); background:#3A2F1A; color:var(--gold);}
+  .team-name-list{display:flex; flex-direction:column; gap:10px; margin-top:6px;}
+  .team-name-row{display:flex; align-items:center; gap:12px;}
+  .team-swatch{width:26px; height:26px; border-radius:8px; flex-shrink:0;}
+  .team-name-row input{
+    flex:1; padding:10px 14px; border-radius:10px; border:2px solid var(--line);
+    background:var(--bg-2); color:var(--ink); font-family:var(--font-body); font-weight:700; font-size:15px;
+  }
+  .start-btn{
+    margin-top:4px; padding:18px; border-radius:14px; border:none; cursor:pointer;
+    background:var(--gold); color:#211A05; font-family:var(--font-display); font-weight:700;
+    font-size:clamp(18px,2vw,24px); letter-spacing:.3px; transition:transform .12s ease;
+  }
+  .start-btn:hover{transform:translateY(-2px);}
+  .start-btn:disabled{opacity:.4; cursor:not-allowed; transform:none;}
+  .hint{font-size:13px; color:var(--ink-dim); margin-top:-6px;}
+
+  /* ---------- PLAY SCREEN ---------- */
+  #play{background:var(--bg);}
+  .top-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1.6vh 2.4vw; border-bottom:2px solid var(--line); flex-shrink:0;
+  }
+  .q-counter{font-family:var(--font-display); font-weight:600; color:var(--ink-dim); font-size:clamp(13px,1.1vw,16px);}
+  .gear-btn{
+    width:44px; height:44px; border-radius:12px; border:2px solid var(--line); background:var(--bg-2);
+    color:var(--ink-dim); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .question-wrap{
+    flex-shrink:0; padding:2.4vh 4vw 2vh 4vw; text-align:center;
+  }
+  .question-text{
+    font-family:var(--font-display); font-weight:700; line-height:1.25;
+    font-size:clamp(24px, 3.6vw, 46px); color:var(--ink);
+  }
+  .status-line{
+    height:4.5vh; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:600; font-size:clamp(15px,1.8vw,22px);
+  }
+  .status-line.waiting{color:var(--ink-dim);}
+  .status-line.locked{color:var(--gold);}
+  .status-line.correct{color:#5BE38A;}
+  .status-line.wrong{color:#FF6B6B;}
+
+  .zones{
+    flex:1; display:grid; gap:14px; padding:0 2.4vw 2.4vh 2.4vw; min-height:0;
+  }
+  .zone{
+    position:relative; border-radius:20px; border:3px solid rgba(255,255,255,.14);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer; overflow:hidden; transition:transform .08s ease, filter .12s ease;
+  }
+  .zone:active{transform:scale(.97);}
+  .zone .team-label{
+    font-family:var(--font-display); font-weight:700; font-size:clamp(18px,2.4vw,30px);
+    color:rgba(0,0,0,.78);
+  }
+  .zone .tap-hint{
+    font-family:var(--font-body); font-weight:800; font-size:clamp(12px,1vw,15px);
+    color:rgba(0,0,0,.55); margin-top:6px; letter-spacing:.5px;
+  }
+  .zone .score-badge{
+    position:absolute; top:12px; right:14px; font-family:var(--font-display); font-weight:700;
+    font-size:clamp(16px,1.6vw,22px); color:rgba(0,0,0,.7);
+  }
+  .zone.dimmed{filter:brightness(.35) saturate(.6);}
+  .zone.winner{filter:brightness(1.15); box-shadow:0 0 0 6px var(--gold) inset;}
+  .zone.disabled{pointer-events:none;}
+
+  .options-overlay{
+    position:absolute; inset:0; background:rgba(10,12,26,.94); display:none;
+    flex-direction:column; align-items:center; justify-content:center; gap:3vh; padding:4vh 4vw; z-index:20;
+  }
+  .options-overlay.active{display:flex;}
+  .options-overlay .for-team{
+    font-family:var(--font-display); font-weight:700; font-size:clamp(20px,2.6vw,32px);
+  }
+  .options-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; width:min(900px,88vw);}
+  .opt-btn{
+    padding:clamp(18px,2.4vh,28px) 14px; border-radius:16px; border:3px solid var(--line);
+    background:var(--panel); color:var(--ink); font-family:var(--font-display); font-weight:600;
+    font-size:clamp(16px,1.8vw,22px); cursor:pointer;
+  }
+  .opt-btn:active{transform:scale(.97);}
+  .opt-btn.right{background:#1E4A34; border-color:#5BE38A;}
+  .opt-btn.wrong{background:#4A1E1E; border-color:#FF6B6B;}
+
+  .teacher-panel{
+    position:absolute; top:0; right:0; height:100%; width:min(360px,86vw);
+    background:var(--panel); border-left:2px solid var(--line); z-index:30;
+    transform:translateX(100%); transition:transform .2s ease;
+    display:flex; flex-direction:column; padding:2.4vh 2vw; gap:14px; overflow-y:auto;
+  }
+  .teacher-panel.open{transform:translateX(0);}
+  .teacher-panel h4{font-family:var(--font-display); margin:0 0 4px 0; font-size:18px;}
+  .tp-btn{
+    padding:14px; border-radius:12px; border:2px solid var(--line); background:var(--bg-2);
+    color:var(--ink); font-family:var(--font-body); font-weight:700; font-size:15px; cursor:pointer; text-align:left;
+  }
+  .tp-btn.primary{background:var(--gold); color:#211A05; border-color:var(--gold);}
+  .tp-score-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border:2px solid var(--line); border-radius:10px;}
+  .tp-score-controls{display:flex; gap:6px;}
+  .tp-score-controls button{width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); cursor:pointer;}
+
+  /* ---------- SCOREBOARD SCREEN ---------- */
+  #scoreboard{align-items:center; justify-content:center; padding:4vh 4vw;}
+  .sb-title{font-family:var(--font-display); font-weight:800; font-size:clamp(26px,4vw,52px); color:var(--gold); margin-bottom:3vh;}
+  .sb-list{display:flex; flex-direction:column; gap:14px; width:min(760px,90vw);}
+  .sb-row{
+    display:flex; align-items:center; gap:18px; padding:16px 22px; border-radius:16px;
+    border:2px solid var(--line);
+  }
+  .sb-rank{font-family:var(--font-display); font-weight:800; font-size:22px; width:30px; color:var(--ink-dim);}
+  .sb-name{flex:1; font-family:var(--font-display); font-weight:700; font-size:clamp(18px,2vw,26px); color:#141520;}
+  .sb-score{font-family:var(--font-display); font-weight:800; font-size:clamp(20px,2.2vw,28px); color:#141520;}
+  .sb-actions{display:flex; gap:14px; margin-top:3.5vh;}
+  .sb-actions button{
+    padding:14px 22px; border-radius:12px; border:2px solid var(--line); background:var(--bg-2);
+    color:var(--ink); font-family:var(--font-body); font-weight:700; cursor:pointer; font-size:15px;
+  }
+  .sb-actions button.primary{background:var(--gold); color:#211A05; border-color:var(--gold);}
+
+  .fs-btn{position:fixed; bottom:14px; left:14px; z-index:50; opacity:.55; font-size:12px;
+    padding:8px 12px; border-radius:8px; border:1px solid var(--line); background:var(--bg-2); color:var(--ink-dim); cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ SETUP ============ -->
+  <section id="setup" class="screen active">
+    <div class="setup-card">
+      <div class="brand">
+        <div class="brand-mark">Kuis Kelompok</div>
+        <div class="brand-sub">untuk layar besar / TV kelas</div>
+      </div>
+
+      <div class="setup-block">
+        <h3>1. Pilih mata pelajaran</h3>
+        <div class="row" id="subjectRow"></div>
+        <div class="hint" id="subjectHint" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="setup-block">
+        <h3>2. Pilih tingkat kelas</h3>
+        <div class="row" id="gradeRow"></div>
+      </div>
+
+      <div class="setup-block">
+        <h3>3. Jumlah kelompok</h3>
+        <div class="row" id="teamCountRow"></div>
+        <div class="team-name-list" id="teamNameList"></div>
+      </div>
+
+      <button class="start-btn" id="startBtn">Mulai Permainan</button>
+    </div>
+  </section>
+
+  <!-- ============ PLAY ============ -->
+  <section id="play" class="screen">
+    <div class="top-bar">
+      <div class="q-counter" id="qCounter">Soal 1 / 10</div>
+      <button class="gear-btn" id="gearBtn" title="Panel guru">⚙</button>
+    </div>
+    <div class="question-wrap">
+      <div class="question-text" id="questionText">—</div>
+    </div>
+    <div class="status-line waiting" id="statusLine">Ketuk zona kelompok untuk menjawab duluan!</div>
+    <div class="zones" id="zones"></div>
+
+    <div class="options-overlay" id="optionsOverlay">
+      <div class="for-team" id="forTeamLabel">Kelompok 1 menjawab:</div>
+      <div class="options-grid" id="optionsGrid"></div>
+    </div>
+
+    <div class="teacher-panel" id="teacherPanel">
+      <h4>Panel Guru</h4>
+      <button class="tp-btn" id="tpResetBuzz">🔁 Reset buzzer (ulang soal ini)</button>
+      <button class="tp-btn" id="tpSkip">⏭ Lewati soal ini</button>
+      <button class="tp-btn primary" id="tpFinish">🏁 Selesai & lihat skor akhir</button>
+      <h4 style="margin-top:8px;">Ubah skor manual</h4>
+      <div id="tpScores" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <button class="tp-btn" id="tpClose">Tutup panel</button>
+    </div>
+  </section>
+
+  <!-- ============ SCOREBOARD ============ -->
+  <section id="scoreboard" class="screen">
+    <div class="sb-title">Papan Skor</div>
+    <div class="sb-list" id="sbList"></div>
+    <div class="sb-actions">
+      <button id="sbAgainBtn">Main Lagi (soal sama)</button>
+      <button class="primary" id="sbNewBtn">Pengaturan Baru</button>
+    </div>
+  </section>
+
+</div>
+<button class="fs-btn" id="fsBtn">Layar Penuh</button>
+
+<script>
+/* =====================================================================
+   BANK SOAL — mudah ditambah mapel baru.
+   Struktur: SUBJECTS.<kode>.grades.<"1-2"|"3-4"|"5-6"> = [ {q, options, correct} ]
+   Untuk menambah mapel baru, cukup tambahkan objek baru di SUBJECTS,
+   ikuti pola yang sama seperti "matematika" di bawah ini.
+===================================================================== */
+const SUBJECTS = {
+  matematika: {
+    label: "Matematika",
+    color: "#4D96FF",
+    grades: {
+      "1-2": [
+        {q:"3 + 4 = ?", options:["6","7","8","9"], correct:1},
+        {q:"9 - 5 = ?", options:["3","4","5","6"], correct:1},
+        {q:"2 + 2 + 2 = ?", options:["4","5","6","8"], correct:2},
+        {q:"Angka setelah 19 adalah ...", options:["18","20","21","19"], correct:1},
+        {q:"10 - 4 = ?", options:["5","6","7","8"], correct:1},
+        {q:"5 + 5 = ?", options:["9","10","11","12"], correct:1},
+        {q:"Bentuk paling banyak sisinya: segitiga, persegi, lingkaran?", options:["Segitiga","Persegi","Lingkaran","Sama semua"], correct:1},
+        {q:"7 + 1 = ?", options:["7","8","9","6"], correct:1},
+      ],
+      "3-4": [
+        {q:"6 × 7 = ?", options:["36","42","48","40"], correct:1},
+        {q:"81 ÷ 9 = ?", options:["7","8","9","10"], correct:2},
+        {q:"128 + 47 = ?", options:["165","175","185","155"], correct:1},
+        {q:"200 - 68 = ?", options:["132","122","142","152"], correct:0},
+        {q:"Hasil dari 8 × 9 = ?", options:["63","72","81","64"], correct:1},
+        {q:"Keliling persegi sisi 5 cm adalah ...", options:["10 cm","15 cm","20 cm","25 cm"], correct:2},
+        {q:"3/4 sama dengan berapa perdelapan?", options:["4/8","5/8","6/8","7/8"], correct:2},
+        {q:"144 ÷ 12 = ?", options:["11","12","13","14"], correct:1},
+        {q:"Bilangan genap terbesar di bawah 50 adalah ...", options:["46","47","48","49"], correct:2},
+        {q:"9 × 6 = ?", options:["45","54","56","63"], correct:1},
+      ],
+      "5-6": [
+        {q:"25% dari 200 adalah ...", options:["25","40","50","60"], correct:2},
+        {q:"KPK dari 4 dan 6 adalah ...", options:["10","12","18","24"], correct:1},
+        {q:"FPB dari 18 dan 24 adalah ...", options:["4","6","8","9"], correct:1},
+        {q:"3,5 + 2,75 = ?", options:["5,25","6,25","6,15","5,75"], correct:1},
+        {q:"Luas persegi panjang 8 × 5 cm adalah ...", options:["13 cm²","26 cm²","40 cm²","45 cm²"], correct:2},
+        {q:"1/2 + 1/4 = ?", options:["2/6","2/4","3/4","1/4"], correct:2},
+        {q:"Hasil dari 12² adalah ...", options:["124","144","132","121"], correct:1},
+        {q:"Volume kubus sisi 4 cm adalah ...", options:["16 cm³","48 cm³","64 cm³","12 cm³"], correct:2},
+      ],
+    }
+  },
+  // Contoh menambah mapel baru (aktifkan dengan mengisi soal lalu muncul otomatis di menu):
+  // bahasa_indonesia: { label:"Bahasa Indonesia", color:"#6BCB77", grades:{ "1-2":[], "3-4":[], "5-6":[] } },
+  // ipa: { label:"IPA", color:"#FF9F45", grades:{ "1-2":[], "3-4":[], "5-6":[] } },
+};
+
+const TEAM_COLORS = ["#FF5D5D","#FFD23F","#35D28A","#3E9CFF","#B47EFF","#FF9142"];
+
+let state = {
+  subjectKey: "matematika",
+  grade: "3-4",
+  teamCount: 4,
+  teamNames: [],
+  teams: [],       // {name, color, score}
+  questions: [],
+  qIndex: 0,
+  locked: false,
+  lockedTeam: null,
+};
+
+/* ---------- Sound (tanpa file eksternal) ---------- */
+let audioCtx = null;
+function beep(freq, dur, type="sine", vol=0.18){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.value = vol;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.stop(audioCtx.currentTime + dur);
+  }catch(e){}
+}
+function soundBuzz(){ beep(720,0.12,"square",0.2); }
+function soundCorrect(){ beep(523,0.1); setTimeout(()=>beep(659,0.1),100); setTimeout(()=>beep(784,0.18),200); }
+function soundWrong(){ beep(180,0.28,"sawtooth",0.15); }
+
+/* ---------- SETUP SCREEN ---------- */
+const subjectRow = document.getElementById('subjectRow');
+const gradeRow = document.getElementById('gradeRow');
+const teamCountRow = document.getElementById('teamCountRow');
+const teamNameList = document.getElementById('teamNameList');
+const subjectHint = document.getElementById('subjectHint');
+
+function renderSubjectChoices(){
+  subjectRow.innerHTML = '';
+  Object.keys(SUBJECTS).forEach(key=>{
+    const s = SUBJECTS[key];
+    const hasQuestions = Object.values(s.grades).some(arr=>arr.length>0);
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (key===state.subjectKey?' selected':'');
+    btn.textContent = s.label + (hasQuestions? '' : ' (segera)');
+    btn.disabled = !hasQuestions;
+    if(!hasQuestions) btn.style.opacity = '.35';
+    btn.onclick = ()=>{ state.subjectKey = key; renderSubjectChoices(); };
+    subjectRow.appendChild(btn);
+  });
+  subjectHint.textContent = 'Mapel lain tinggal ditambahkan ke bank soal — tampil otomatis di sini.';
+}
+function renderGradeChoices(){
+  gradeRow.innerHTML = '';
+  [["1-2","Kelas 1–2"],["3-4","Kelas 3–4"],["5-6","Kelas 5–6"]].forEach(([key,label])=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (key===state.grade?' selected':'');
+    btn.textContent = label;
+    btn.onclick = ()=>{ state.grade = key; renderGradeChoices(); };
+    gradeRow.appendChild(btn);
+  });
+}
+function renderTeamCountChoices(){
+  teamCountRow.innerHTML = '';
+  [2,3,4,5,6].forEach(n=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (n===state.teamCount?' selected':'');
+    btn.textContent = n + ' kelompok';
+    btn.onclick = ()=>{ state.teamCount = n; renderTeamCountChoices(); renderTeamNameInputs(); };
+    teamCountRow.appendChild(btn);
+  });
+}
+function renderTeamNameInputs(){
+  teamNameList.innerHTML = '';
+  for(let i=0;i<state.teamCount;i++){
+    if(!state.teamNames[i]) state.teamNames[i] = 'Kelompok ' + (i+1);
+    const row = document.createElement('div');
+    row.className = 'team-name-row';
+    const sw = document.createElement('div');
+    sw.className = 'team-swatch';
+    sw.style.background = TEAM_COLORS[i];
+    const input = document.createElement('input');
+    input.value = state.teamNames[i];
+    input.maxLength = 18;
+    input.oninput = (e)=>{ state.teamNames[i] = e.target.value || ('Kelompok '+(i+1)); };
+    row.appendChild(sw); row.appendChild(input);
+    teamNameList.appendChild(row);
+  }
+}
+renderSubjectChoices();
+renderGradeChoices();
+renderTeamCountChoices();
+renderTeamNameInputs();
+
+document.getElementById('startBtn').onclick = startGame;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ---------- START GAME ---------- */
+function startGame(){
+  const subj = SUBJECTS[state.subjectKey];
+  const pool = (subj.grades[state.grade] || []).slice();
+  if(pool.length === 0){ alert('Belum ada soal untuk pilihan ini.'); return; }
+  // acak urutan soal
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  state.questions = pool;
+  state.qIndex = 0;
+  state.teams = [];
+  for(let i=0;i<state.teamCount;i++){
+    state.teams.push({ name: state.teamNames[i] || ('Kelompok '+(i+1)), color: TEAM_COLORS[i], score: 0 });
+  }
+  renderZones();
+  loadQuestion();
+  showScreen('play');
+}
+
+/* ---------- PLAY SCREEN ---------- */
+const zonesEl = document.getElementById('zones');
+const questionText = document.getElementById('questionText');
+const qCounter = document.getElementById('qCounter');
+const statusLine = document.getElementById('statusLine');
+const optionsOverlay = document.getElementById('optionsOverlay');
+const optionsGrid = document.getElementById('optionsGrid');
+const forTeamLabel = document.getElementById('forTeamLabel');
+
+function gridColsFor(n){
+  if(n<=2) return '1fr 1fr';
+  if(n<=4) return '1fr 1fr';
+  return '1fr 1fr 1fr';
+}
+function gridRowsFor(n){
+  if(n<=2) return '1fr';
+  if(n<=4) return '1fr 1fr';
+  return '1fr 1fr';
+}
+function renderZones(){
+  zonesEl.innerHTML = '';
+  zonesEl.style.gridTemplateColumns = gridColsFor(state.teams.length);
+  zonesEl.style.gridTemplateRows = gridRowsFor(state.teams.length);
+  state.teams.forEach((team, idx)=>{
+    const z = document.createElement('div');
+    z.className = 'zone';
+    z.style.background = team.color;
+    z.dataset.idx = idx;
+    z.innerHTML = `
+      <div class="score-badge">${team.score}</div>
+      <div class="team-label">${escapeHtml(team.name)}</div>
+      <div class="tap-hint">KETUK DI SINI</div>
+    `;
+    z.addEventListener('pointerdown', ()=>onZoneBuzz(idx));
+    zonesEl.appendChild(z);
+  });
+}
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+}
+
+function loadQuestion(){
+  state.locked = false;
+  state.lockedTeam = null;
+  optionsOverlay.classList.remove('active');
+  const q = state.questions[state.qIndex];
+  if(!q){ showScoreboard(); return; }
+  questionText.textContent = q.q;
+  qCounter.textContent = `Soal ${state.qIndex+1} / ${state.questions.length}`;
+  statusLine.className = 'status-line waiting';
+  statusLine.textContent = 'Ketuk zona kelompok untuk menjawab duluan!';
+  document.querySelectorAll('.zone').forEach(z=>{
+    z.classList.remove('dimmed','winner','disabled');
+  });
+}
+
+function onZoneBuzz(idx){
+  if(state.locked) return;
+  state.locked = true;
+  state.lockedTeam = idx;
+  soundBuzz();
+  document.querySelectorAll('.zone').forEach(z=>{
+    const zi = parseInt(z.dataset.idx);
+    z.classList.add('disabled');
+    if(zi === idx){ z.classList.add('winner'); } else { z.classList.add('dimmed'); }
+  });
+  const team = state.teams[idx];
+  statusLine.className = 'status-line locked';
+  statusLine.textContent = `${team.name} duluan! Menjawab sekarang...`;
+  openOptionsFor(idx);
+}
+
+function openOptionsFor(teamIdx){
+  const team = state.teams[teamIdx];
+  const q = state.questions[state.qIndex];
+  forTeamLabel.textContent = `${team.name} menjawab:`;
+  forTeamLabel.style.color = team.color;
+  optionsGrid.innerHTML = '';
+  q.options.forEach((opt, i)=>{
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.textContent = opt;
+    b.onclick = ()=>answerSelected(teamIdx, i, b);
+    optionsGrid.appendChild(b);
+  });
+  optionsOverlay.classList.add('active');
+}
+
+function answerSelected(teamIdx, optIdx, btnEl){
+  const q = state.questions[state.qIndex];
+  document.querySelectorAll('.opt-btn').forEach(b=>b.onclick=null);
+  const isCorrect = (optIdx === q.correct);
+  document.querySelectorAll('.opt-btn').forEach((b,i)=>{
+    if(i===q.correct) b.classList.add('right');
+    if(i===optIdx && !isCorrect) b.classList.add('wrong');
+  });
+  if(isCorrect){
+    state.teams[teamIdx].score += 10;
+    soundCorrect();
+    statusLine.className = 'status-line correct';
+    statusLine.textContent = `Benar! ${state.teams[teamIdx].name} +10 poin 🎉`;
+  }else{
+    soundWrong();
+    statusLine.className = 'status-line wrong';
+    statusLine.textContent = `Kurang tepat. Jawaban benar: ${q.options[q.correct]}`;
+  }
+  updateScoreBadges();
+  setTimeout(()=>{
+    optionsOverlay.classList.remove('active');
+    nextQuestion();
+  }, 2200);
+}
+
+function updateScoreBadges(){
+  document.querySelectorAll('.zone').forEach(z=>{
+    const idx = parseInt(z.dataset.idx);
+    const badge = z.querySelector('.score-badge');
+    if(badge) badge.textContent = state.teams[idx].score;
+  });
+}
+
+function nextQuestion(){
+  state.qIndex += 1;
+  if(state.qIndex >= state.questions.length){ showScoreboard(); return; }
+  loadQuestion();
+}
+
+/* ---------- TEACHER PANEL ---------- */
+const teacherPanel = document.getElementById('teacherPanel');
+document.getElementById('gearBtn').onclick = ()=>{
+  renderTeacherScores();
+  teacherPanel.classList.add('open');
+};
+document.getElementById('tpClose').onclick = ()=> teacherPanel.classList.remove('open');
+document.getElementById('tpResetBuzz').onclick = ()=>{ teacherPanel.classList.remove('open'); loadQuestion(); };
+document.getElementById('tpSkip').onclick = ()=>{ teacherPanel.classList.remove('open'); nextQuestion(); };
+document.getElementById('tpFinish').onclick = ()=>{ teacherPanel.classList.remove('open'); showScoreboard(); };
+
+function renderTeacherScores(){
+  const wrap = document.getElementById('tpScores');
+  wrap.innerHTML = '';
+  state.teams.forEach((t, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'tp-score-row';
+    row.innerHTML = `
+      <span>${escapeHtml(t.name)}: <b>${t.score}</b></span>
+      <span class="tp-score-controls">
+        <button data-op="-">−</button>
+        <button data-op="+">+</button>
+      </span>
+    `;
+    row.querySelectorAll('button').forEach(btn=>{
+      btn.onclick = ()=>{
+        t.score += (btn.dataset.op === '+' ? 10 : -10);
+        if(t.score < 0) t.score = 0;
+        renderTeacherScores();
+        updateScoreBadges();
+      };
+    });
+    wrap.appendChild(row);
+  });
+}
+
+/* ---------- SCOREBOARD ---------- */
+function showScoreboard(){
+  const sbList = document.getElementById('sbList');
+  sbList.innerHTML = '';
+  const ranked = state.teams.slice().sort((a,b)=>b.score-a.score);
+  ranked.forEach((t, i)=>{
+    const row = document.createElement('div');
+    row.className = 'sb-row';
+    row.style.background = t.color;
+    row.innerHTML = `
+      <div class="sb-rank">#${i+1}</div>
+      <div class="sb-name">${escapeHtml(t.name)}</div>
+      <div class="sb-score">${t.score} poin</div>
+    `;
+    sbList.appendChild(row);
+  });
+  showScreen('scoreboard');
+}
+document.getElementById('sbAgainBtn').onclick = ()=>{
+  state.teams.forEach(t=>t.score=0);
+  state.qIndex = 0;
+  const pool = state.questions.slice();
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  state.questions = pool;
+  renderZones();
+  loadQuestion();
+  showScreen('play');
+};
+document.getElementById('sbNewBtn').onclick = ()=>{ showScreen('setup'); };
+
+/* ---------- FULLSCREEN ---------- */
+document.getElementById('fsBtn').onclick = ()=>{
+  if(!document.fullscreenElement){ document.documentElement.requestFullscreen().catch(()=>{}); }
+  else{ document.exitFullscreen(); }
+};
+</script>
+</body>
+</html>

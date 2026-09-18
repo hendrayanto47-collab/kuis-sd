@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Kelompok SD — Beranda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#171B34;
+    --bg-2:#20264A;
+    --panel:#242B54;
+    --ink:#F4F1E8;
+    --ink-dim:#AEB3D6;
+    --gold:#FFC94D;
+    --line:#3A4178;
+    --red:#FF5D5D;
+    --yellow:#FFD23F;
+    --green:#35D28A;
+    --blue:#3E9CFF;
+    --purple:#B47EFF;
+    --font-display:'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+    --font-body:'Nunito', 'Segoe UI', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--ink); font-family:var(--font-body);}
+  body{line-height:1.5;}
+  a{color:inherit; text-decoration:none;}
+  img,svg{display:block;}
+
+  .wrap{max-width:1040px; margin:0 auto; padding:0 clamp(20px,5vw,40px);}
+
+  /* ---------- NAV ---------- */
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px clamp(20px,5vw,40px);
+  }
+  .logo{font-family:var(--font-display); font-weight:700; font-size:20px; display:flex; align-items:center; gap:10px;}
+  .logo-dot{width:12px; height:12px; border-radius:4px; background:var(--gold); transform:rotate(20deg);}
+  .nav-link{
+    font-family:var(--font-body); font-weight:700; font-size:14px;
+    padding:10px 20px; border-radius:10px; border:2px solid var(--line); background:var(--bg-2);
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:6vh 0 8vh 0; display:flex; flex-direction:column; align-items:flex-start; gap:22px;
+    position:relative; overflow:hidden;
+  }
+  .hero-eyebrow{
+    font-family:var(--font-body); font-weight:800; font-size:14px; color:var(--gold);
+    background:rgba(255,201,77,.12); border:1.5px solid rgba(255,201,77,.4);
+    padding:6px 14px; border-radius:999px;
+  }
+  .hero h1{
+    font-family:var(--font-display); font-weight:800; font-size:clamp(38px,6vw,64px);
+    line-height:1.06; margin:0; max-width:16ch;
+  }
+  .hero h1 .accent{color:var(--gold);}
+  .hero p{
+    font-size:clamp(16px,1.6vw,19px); color:var(--ink-dim); max-width:56ch; margin:0;
+  }
+  .hero-actions{display:flex; gap:16px; flex-wrap:wrap; margin-top:10px;}
+  .btn{
+    font-family:var(--font-display); font-weight:700; font-size:17px;
+    padding:16px 30px; border-radius:14px; border:none; cursor:pointer; display:inline-block;
+  }
+  .btn-primary{background:var(--gold); color:#211A05;}
+  .btn-ghost{background:transparent; color:var(--ink); border:2px solid var(--line);}
+  .hero-strip{
+    display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;
+  }
+  .strip-chip{
+    font-size:13px; font-weight:700; color:var(--ink-dim); border:1.5px solid var(--line);
+    padding:6px 12px; border-radius:999px;
+  }
+  .hero-shape{
+    position:absolute; right:-60px; top:-40px; width:340px; height:340px; opacity:.5; z-index:-1;
+  }
+
+  /* ---------- MENU GAME ---------- */
+  .section{padding:6vh 0;}
+  .section-head{margin-bottom:28px;}
+  .section-head .tag{font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--gold); margin-bottom:6px;}
+  .section-head h2{font-family:var(--font-display); font-weight:700; font-size:clamp(24px,3vw,32px); margin:0;}
+  .section-head p{color:var(--ink-dim); margin-top:6px; max-width:60ch;}
+
+  .game-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px;}
+  .game-card{
+    border-radius:20px; padding:26px; border:2.5px solid var(--line);
+    display:flex; flex-direction:column; gap:10px; min-height:190px; position:relative;
+    transition:transform .12s ease;
+  }
+  .game-card.live{cursor:pointer;}
+  .game-card.live:hover{transform:translateY(-4px);}
+  .game-card.soon{opacity:.5;}
+  .game-card .icon{font-size:34px;}
+  .game-card h3{font-family:var(--font-display); font-weight:700; font-size:20px; margin:4px 0 0 0; color:#141520;}
+  .game-card .desc{font-size:13.5px; color:rgba(20,21,32,.72); flex:1;}
+  .game-card .pill{
+    align-self:flex-start; font-size:11.5px; font-weight:800; padding:4px 10px; border-radius:999px;
+    background:rgba(20,21,32,.14); color:#141520;
+  }
+
+  /* ---------- TENTANG PENGEMBANG ---------- */
+  .about-card{
+    display:flex; gap:28px; align-items:center; background:var(--panel); border:2px solid var(--line);
+    border-radius:22px; padding:clamp(24px,3vw,38px); flex-wrap:wrap;
+  }
+  .avatar{
+    width:88px; height:88px; border-radius:20px; background:linear-gradient(135deg, var(--blue), var(--purple));
+    display:flex; align-items:center; justify-content:center; font-family:var(--font-display);
+    font-weight:800; font-size:34px; color:#fff; flex-shrink:0;
+  }
+  .about-text{flex:1; min-width:240px;}
+  .about-text .role{font-size:13px; font-weight:800; color:var(--gold); margin-bottom:4px;}
+  .about-text h3{font-family:var(--font-display); font-weight:700; font-size:22px; margin:0 0 8px 0;}
+  .about-text p{color:var(--ink-dim); margin:0 0 14px 0; max-width:60ch; font-size:15px;}
+  .about-links{display:flex; gap:10px; flex-wrap:wrap;}
+  .about-links a{
+    font-size:13.5px; font-weight:700; padding:9px 16px; border-radius:10px; border:2px solid var(--line);
+    background:var(--bg-2);
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    border-top:2px solid var(--line); padding:28px clamp(20px,5vw,40px); margin-top:4vh;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+  }
+  footer .fmark{font-family:var(--font-display); font-weight:700; color:var(--ink-dim); font-size:14px;}
+  footer .fnote{font-size:13px; color:var(--ink-dim); opacity:.7;}
+
+  @media (max-width:640px){
+    .about-card{flex-direction:column; align-items:flex-start; text-align:left;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:0;">
+    <div class="logo"><span class="logo-dot"></span>Kuis Kelompok SD</div>
+    <a class="nav-link" href="game.html">Mulai Main</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="hero-eyebrow">Gratis untuk guru di seluruh Indonesia</div>
+    <h1>Kuis cepat-cepatan <span class="accent">berkelompok</span>, langsung di layar besar kelas.</h1>
+    <p>Anak-anak dibagi jadi beberapa kelompok, lalu adu cepat menjawab langsung di TV/IFP sekolah. Tidak perlu HP siswa, tidak perlu install apa pun — cukup buka link ini.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="game.html">▶ Mulai Bermain</a>
+      <a class="btn btn-ghost" href="#tentang-pengembang">Tentang Pembuatnya</a>
+    </div>
+    <div class="hero-strip">
+      <span class="strip-chip">🖐️ Cocok untuk layar sentuh (IFP)</span>
+      <span class="strip-chip">🎓 Kelas 1–6 SD</span>
+      <span class="strip-chip">🆓 100% gratis</span>
+    </div>
+  </section>
+
+  <!-- ============ MENU GAME ============ -->
+  <section class="section">
+    <div class="section-head">
+      <div class="tag">Pilih permainan</div>
+      <h2>Daftar Mata Pelajaran</h2>
+      <p>Mulai dari Matematika. Mapel lain akan menyusul dan otomatis muncul di sini.</p>
+    </div>
+    <div class="game-grid">
+      <a class="game-card live" href="game.html" style="background:var(--blue);">
+        <div class="icon">🔢</div>
+        <h3>Matematika</h3>
+        <div class="desc">Kelas 1–6 · Cepat-tepat berkelompok</div>
+        <div class="pill">Main sekarang →</div>
+      </a>
+      <div class="game-card soon" style="background:var(--green);">
+        <div class="icon">📖</div>
+        <h3>Bahasa Indonesia</h3>
+        <div class="desc">Kelas 1–6</div>
+        <div class="pill">Segera hadir</div>
+      </div>
+      <div class="game-card soon" style="background:var(--yellow);">
+        <div class="icon">🔬</div>
+        <h3>IPA</h3>
+        <div class="desc">Kelas 1–6</div>
+        <div class="pill">Segera hadir</div>
+      </div>
+      <div class="game-card soon" style="background:var(--purple);">
+        <div class="icon">🌍</div>
+        <h3>IPS</h3>
+        <div class="desc">Kelas 1–6</div>
+        <div class="pill">Segera hadir</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TENTANG PENGEMBANG ============ -->
+  <!--
+    GANTI DI SINI:
+    - Ganti "H" (inisial) dan gradien avatar sesuai selera
+    - Ganti nama, peran, dan bio singkat
+    - Ganti link Instagram/Facebook di bagian .about-links
+  -->
+  <section class="section" id="tentang-pengembang">
+    <div class="section-head">
+      <div class="tag">Di balik layar</div>
+      <h2>Tentang Pembuatnya</h2>
+    </div>
+    <div class="about-card">
+      <div class="avatar">H</div>
+      <div class="about-text">
+        <div class="role">Pembuat & Pengelola</div>
+        <h3>Hendrayanto</h3>
+        <p>Dibuat oleh seorang guru untuk membantu sesama guru menghadirkan pembelajaran yang lebih interaktif di kelas, memanfaatkan TV/IFP yang sudah tersedia di sekolah. Terbuka untuk masukan dan kolaborasi menambah bank soal.</p>
+        <div class="about-links">
+          <a href="https://instagram.com/namaakun" target="_blank" rel="noopener">📷 Instagram</a>
+          <a href="https://github.com/hendrayanto47-collab/kuis-sd" target="_blank" rel="noopener">💻 Kode Sumber</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="fmark">Kuis Kelompok SD</div>
+  <div class="fnote">Dibuat untuk mendukung pembelajaran interaktif di sekolah Indonesia.</div>
+</footer>
+
+</body>
+</html>
